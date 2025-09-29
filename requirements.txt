@@ -1,0 +1,7 @@
+gmpy2
+numpy
+matplotlib
+scipy
+networkx
+plotly
+ecdsa
