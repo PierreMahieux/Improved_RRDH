@@ -1,7 +1,9 @@
 import os
 import random
 import numpy as np
+import argparse
 from glob import glob
+import json
 
 from src.robust_reversible_data_hiding import rrdh
 from src.improved_robust_reversible_data_hiding import improved_rrdh
@@ -12,17 +14,40 @@ MESSAGE_LENGTH = 256
 QUANTISATION_FACTOR = 4
 
 if __name__ == "__main__":
-    list_methods = [rrdh, improved_rrdh]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config_path", type=str, default="configs/test_improved.json")
+    args = parser.parse_args()
+
     script_dir = os.path.dirname(__file__)
-
     dataset_path = "./datasets/meshes/"
-    meshes_list = glob(dataset_path + "*.obj")
-    
-    
-    message_bits = [np.random(0, 2) for _ in range(MESSAGE_LENGTH)]
-    watermarks = (message_bits)
 
-    encryption_keys = paillier.generate_keys(KEY_SIZE)
+    config_path = args.config_path
+    config_file = open(config_path, 'r')
+    config = json.loads(config_file.read())
+    config_file.close()
+
+    list_methods = []
+    if config["methods"] == "all":
+        list_methods.extend([improved_rrdh, rrdh])
+    elif "improved_rrdh" in config["methods"]:
+        list_methods.append(improved_rrdh)
+    elif "rrdh" in config["methods"]:
+        list_methods.append(rrdh)
+    else: list_methods.append(rrdh)
+    
+    meshes_list = []
+    if config["models"] == "all":
+        meshes_list = glob(dataset_path + "*.obj")
+    else: 
+        for m in config["models"]:
+            meshes_list.extend(glob(dataset_path + m))
+
+    
+    message_bits = [k%2 for k in range(config["message_length"])]
+    random.shuffle(message_bits)
+    watermark = message_bits
+
+    encryption_keys = paillier.generate_keys(config["key_size"])
 
     for model_path in meshes_list:
         model = mesh_utils.load_3d_model(os.path.join(script_dir, model_path))
@@ -33,9 +58,9 @@ if __name__ == "__main__":
             for f in glob(result_folder + "*"):
                 os.remove(f)
 
-            config = {"key_size": KEY_SIZE, "quantisation_factor": QUANTISATION_FACTOR, "result_folder": result_folder, "model_path": model_path, "model_name": model_name, "message_length": MESSAGE_LENGTH, "method_name": method.__name__}
+            config.update({"result_folder": result_folder, "model_path": model_path, "model_name": model_name, "method_name": method.__name__})
 
-            result = method.run(config, encryption_keys, watermarks, model)
+            result = method.run(config, encryption_keys, watermark, model)
 
             util.write_report(result)
 
