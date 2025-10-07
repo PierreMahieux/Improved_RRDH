@@ -3,14 +3,12 @@ import time
 
 
 def get_prime(size):
-    """Génère un nombre premier de taille donnée"""
     seed = random_state(int(time.time() * 1000000))
     p = mpz_urandomb(seed, size)
     p = p.bit_set(size - 1)  # Set MSB to 1 
     return next_prime(p)
 
 def generate_keys(size) -> dict:
-    """Génère les clés publiques et privées de Paillier"""
     p = get_prime(size//2)
     while True:
         q = get_prime(size//2)
@@ -24,7 +22,6 @@ def generate_keys(size) -> dict:
     return {"public": pub_key, "secret": priv_key}
 
 def generate_r(N):
-    """Génère un nombre aléatoire r copremier avec N"""
     while True:
         seed = random_state(time.time_ns())
         r = mpz_random(seed, N)
@@ -33,12 +30,9 @@ def generate_r(N):
     return r
 
 def encrypt(message, public_key):
-    """Chiffre un message avec Paillier"""
-    
     return encrypt_given_r(message, public_key, generate_r(public_key[0]))
 
 def encrypt_given_r(message, public_key, r):
-    # Chiffre un message avec Paillier pour une valeur de r donnée
     N2 = public_key[0] ** 2
     r = powmod(r, public_key[0], N2)
     c = powmod(public_key[1], message, N2)

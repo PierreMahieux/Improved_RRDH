@@ -1,51 +1,16 @@
 import hashlib
 import os
-import uuid
 import datetime
 import json
-import ecdsa
-
-
-def genereate_signing_keys() -> dict:
-    sk = ecdsa.SigningKey.generate(curve=ecdsa.NIST256p)
-    vk = sk.verifying_key
-    return {"signing": sk, "verifying": vk}
-
-def verify_signature(signature, message: bytes, verifying_key) -> bool:
-    try:
-        verifying_key.verify(signature, message)
-        return True
-    except ecdsa.BadSignatureError:
-        return False
-
-def generate_signature(message: bytes, signing_key) -> bytes:
-    return signing_key.sign(message)
 
 def hash_string_to_bits(message: str):
-    """
-    Génère 256 bits de tatouage à partir d'un hash SHA-256
-    
-    message: le message à tatouer (str). Si None, génère un message aléatoire
-    
-    Retourne le hash du message en 256 bits 
-    """
     assert(message!=None)
     
-    # Calculer le SHA-256
     hash_bytes = hashlib.sha256(message.encode('utf-8')).digest()
     
     return bytes_to_bits(hash_bytes)
 
 def int_to_bits(value, num_bits):
-    """
-    Convertit un entier en liste de bits
-    
-    value: entier à convertir
-    num_bits: nombre de bits souhaité
-             
-    Retourne la liste de bits [MSB, ..., LSB]
-    """
-    # S'assurer que value est un entier Python
     value = int(value)
     
     bits = []
@@ -54,16 +19,8 @@ def int_to_bits(value, num_bits):
     return bits
 
 def bits_to_int(bits):
-    """
-    Convertit une liste de bits en entier
-    
-    bits: liste de bits [MSB, ..., LSB]
-    
-    Retourne l'entier correspondant
-    """
     value = 0
     for i, bit in enumerate(reversed(bits)):
-        # Convertir en int Python pour éviter les problèmes numpy
         value += int(bit) * (2 ** i)
     return int(value)
 
@@ -88,30 +45,25 @@ def write_report(results: dict) -> None:
             for key, value in results.items():
                 if "model" not in key and "signature" not in key and "watermark" not in key and "blocks" not in key and "keys" not in key:
                     file.write(f"\"{key}\": {value},\n")
-                # if {"model", "vertices", "signature", "watermark", "blocks", "keys"} not in key:
-                #     file.write(f"\"{key}\": {value},\n")
         
-        print(f"Rapport sauvegardé dans {filename}")
+        print(f"Report saved to {filename}")
     except Exception as e:
-        print(f"Erreur lors de l'écriture du rapport': {e}")  
+        print(f"Error during report writing: {e}")  
 
     return None
 
 def compare_bits(original_bits, extracted_bits):
-    """Compare deux séquences de bits et affiche les statistiques et retourne le BER [0,1]"""
     min_len = min(len(original_bits), len(extracted_bits))
     
     if min_len == 0:
-        print("Erreur: Au moins une séquence est vide")
-        return 1
-    
-    # Comparer bit par bit
+        print("Error: at least one sequence is empty")
+        return -1
+
     errors = 0
     for i in range(min_len):
         if original_bits[i] != extracted_bits[i]:
             errors += 1
     
-    # Calculer le BER (Bit Error Rate)
     ber = errors / min_len
     
     return ber

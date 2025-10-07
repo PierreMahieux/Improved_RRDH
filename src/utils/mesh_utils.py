@@ -1,20 +1,10 @@
 import os
 import numpy as np
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
 import time,random
 from datetime import datetime
-# import plotly.graph_objects as go
-# from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 def load_3d_model(filename=None):
-    """Charge un modèle 3D depuis un fichier .obj ou génère un cube simple
-       filename: nom du fichier .obj à charger
-       
-       Retourne les noeuds et les faces en tableau numpy"""
-    
-    # Charger depuis un fichier .obj
     vertices = []
     faces = []
     with open(filename, 'r') as file:
@@ -48,7 +38,6 @@ def load_3d_model(filename=None):
         return {"vertices":vertices, "faces":faces}
 
 def save_3d_model(vertices, faces, filename):
-    """Sauvegarde un modèle 3D dans un fichier .obj"""
     try:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as file:
@@ -60,22 +49,17 @@ def save_3d_model(vertices, faces, filename):
                 for face in faces:
                     file.write(f"f {face[0]+1} {face[1]+1} {face[2]+1}\n")
         
-        print(f"Modèle sauvegardé dans {filename}")
+        print(f"Model saved to {filename}")
     except Exception as e:
-        print(f"Erreur lors de la sauvegarde: {e}")  
+        print(f"Error during saving: {e}")  
         
 
 def compute_hausdorff(file1, file2):
-    """
-    Compare deux fichiers .obj et calcule les distances
-    """
-    
-    # Charger les maillages
     mesh1 = load_mesh(file1)
     mesh2 = load_mesh(file2)
     
     if mesh1 is None or mesh2 is None:
-        print("Erreur: Impossible de charger les maillages")
+        print("Error: Can't load mesh")
         return
     
     hausdorff = hausdorff_distance(mesh1, mesh2)
@@ -98,18 +82,10 @@ def directed_hausdorff(model1, model2) -> float:
     return hd
 
 def hausdorff_distance(mesh1, mesh2):
-    """
-    Calcule la distance de Hausdorff entre deux maillages
-    """
     vertices1 = mesh1.vertices
     vertices2 = mesh2.vertices
     
-    # Distance de Hausdorff directionnelle de mesh1 vers mesh2
     d_forward = directed_hausdorff(vertices1, vertices2)[0]
-    # Distance de Hausdorff directionnelle de mesh2 vers mesh1
     d_backward = directed_hausdorff(vertices2, vertices1)[0]
     
-    # La distance de Hausdorff est le maximum des deux
-    hausdorff_dist = max(d_forward, d_backward)
-    
-    return hausdorff_dist
+    return max(d_forward, d_backward)
