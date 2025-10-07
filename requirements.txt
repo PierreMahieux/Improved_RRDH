@@ -1,7 +1,2 @@
-gmpy2
-numpy
-matplotlib
-scipy
-networkx
-plotly
-ecdsa
+gmpy2>=2.2.1
+numpy>=2.3.3
